@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.4
+
+- Fixed not having integrated both fixes
+
 ## 0.4.3
 
 - Fixed another bug when getting Tado zone ids
