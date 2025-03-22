@@ -79,10 +79,10 @@ class TadoAdapter:
         return zone_ids
 
     def get_zone_id(self, zone_name: str) -> int:
-        return self.zone_ids()[zone_name]
+        return self.zone_ids[zone_name]
 
     def get_zone_name(self, zone_id: int) -> str:
-        return next(name for name, id in self.zone_ids().items() if id == zone_id)
+        return next(name for name, id in self.zone_ids.items() if id == zone_id)
 
 
     def set_schedules_for_all_zones(self, home_schedules: HomeSchedules) -> None:
