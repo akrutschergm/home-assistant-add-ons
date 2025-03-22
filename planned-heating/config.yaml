@@ -1,7 +1,7 @@
 ---
 name: "Planned heating with Tado°"
 description: "Continuously sets tado° heating shedules according to ChurchTools resource bookings."
-version: "0.4.0"
+version: "0.4.1"
 slug: "planned_heating"
 init: false
 arch:
