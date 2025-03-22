@@ -1,7 +1,7 @@
 ---
 name: "Planned heating with Tado°"
-description: "Continuously sets tado° heating shedules according to iCal events or ChurchTools resource bookings."
-version: "0.3.0"
+description: "Continuously sets tado° heating shedules according to ChurchTools resource bookings."
+version: "0.4.0"
 slug: "planned_heating"
 init: false
 arch:
@@ -13,9 +13,6 @@ arch:
 options:
   churchtools:
     url: null
-    username: null
-    password: null
-  tado:
     username: null
     password: null
   heating:
@@ -32,9 +29,6 @@ options:
 schema:
   churchtools:
     url: url
-    username: email
-    password: password
-  tado:
     username: email
     password: password
   heating:

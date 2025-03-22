@@ -1,6 +1,5 @@
 from datetime import time
 import logging
-from models.settings import TadoSettings
 from models.schedules import DailySchedule
 from models.tadoschedules import HomeSchedules, ZoneSchedules
 from PyTado.interface import Tado
@@ -34,11 +33,9 @@ def _to_tado_schedule(day_type: str, schedule: DailySchedule) -> list[any]:
     return list([_create_time_block(day_type, b.start, b.end, b.temperature) \
         for b in schedule.blocks.values()])
 
-
 class TadoAdapter:
     logger: logging.Logger = logging.getLogger(__name__)
-    settings: TadoSettings
-    _tado: Tado = None
+    tado: Tado = None
     zone_ids: dict[str: int] = None
 
     TIMETABLE_MON_TO_SUN = 0
@@ -55,23 +52,30 @@ class TadoAdapter:
     # DAY_TYPE_SATURDAY = 'SATURDAY'
     # DAY_TYPE_SUNDAY = 'SUNDAY'
 
-    def __init__(self, settings: TadoSettings):
-        self.settings = settings
+    def __init__(self):
+        self.tado = self._activate_device()
+        self.zone_ids = self._get_zone_ids()
 
-    def _get_tado(self) -> Tado:
-        # todo: replace this lazy initialization with a factory parameter in CachingTadoAdapter
-        if not self._tado:
-            self._tado = Tado(self.settings.username, self.settings.password)
-            self.logger.debug('Connected to Tado: %s', self)
-        return self._tado
+    def _activate_device(self) -> Tado:
+        tado = Tado()
+        self.logger.info("Device activation status: %s", tado.device_activation_status())
+        self.logger.info("Device verification URL: %s", tado.device_verification_url())
+
+        self.logger.info("Starting device activation")
+        tado.device_activation()
+
+        self.logger.info("Device activation status: %s", tado.device_activation_status())
+        return tado
 
     def _get_zone_ids(self) -> dict[str: int]:
-        if not self.zone_ids:
-            self.logger.debug('Gettings zones')
-            zones = self._get_tado().get_zones()
-            self.logger.debug('zones: %s', zones)
-            self.zone_ids = { z.get('name') : z.get('id') for z in zones }
-        return self.zone_ids
+        self.logger.debug('Gettings zones')
+
+        zones = self.tado.get_zones()
+        self.logger.debug('Tado zones: %s', zones)
+
+        zone_ids = { z.get('name') : z.get('id') for z in zones }
+        self.logger.info('Tado zones: %s', zone_ids)
+        return zone_ids
 
     def get_zone_id(self, zone_name: str) -> int:
         return self._get_zone_ids()[zone_name]
@@ -92,7 +96,7 @@ class TadoAdapter:
             schedule = zone_schedules.daily_schedules[weekday]
             self.set_schedule_for_zone_and_day(zone_schedules.name, zone_schedules.id, weekday, schedule)
 
-        result = self._get_tado().set_timetable(zone_schedules.id, 2) # timetable: 2 = Tado.Timetable.SEVEN_DAY
+        result = self.tado.set_timetable(zone_schedules.id, 2) # timetable: 2 = Tado.Timetable.SEVEN_DAY
         self.logger.debug('result: %s', result)
 
 
@@ -103,5 +107,5 @@ class TadoAdapter:
         tado_schedule = _to_tado_schedule(day_type, schedule)
         self.logger.debug('Schedule: %s', tado_schedule)
 
-        result = self._get_tado().set_schedule(zone_id, 2, day_type, tado_schedule) # timetable: 2 = Tado.Timetable.SEVEN_DAY
+        result = self.tado.set_schedule(zone_id, 2, day_type, tado_schedule) # timetable: 2 = Tado.Timetable.SEVEN_DAY
         self.logger.debug('result: %s', result)
