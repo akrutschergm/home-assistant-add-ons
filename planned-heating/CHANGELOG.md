@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- Tado device flow now replaces username and password login procedure
+
 ## 0.3.0
 
 - Now runs as Home Assistant add-on
