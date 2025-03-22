@@ -24,10 +24,12 @@ class Service:
     logger: logging.Logger = logging.getLogger(__name__)
     config_file: str
     queue: asyncio.Queue
+    tado: TadoAdapter
 
-    def __init__(self, config_file: str, queue: asyncio.Queue):
+    def __init__(self, config_file: str, queue: asyncio.Queue, tado: TadoAdapter):
         self.config_file = config_file
         self.queue = queue
+        self.tado = tado
 
     async def run(self):
         try:
@@ -41,7 +43,7 @@ class Service:
                     config = CoreSettings.load_from(self.config_file)
 
                     self.logger.debug('Starting work, message: %s', msg)
-                    Worker(config).execute(msg)
+                    Worker(config, self.tado).execute(msg)
 
                     duration = time.monotonic() - started_at
                     self.logger.debug('Finished work after %.2f seconds', duration)
@@ -60,9 +62,11 @@ class Service:
 class Worker:
     logger: logging.Logger = logging.getLogger(__name__)
     settings: CoreSettings
+    tado: TadoAdapter
 
-    def __init__(self, settings: CoreSettings):
+    def __init__(self, settings: CoreSettings, tado: TadoAdapter):
         self.settings = settings
+        self.tado = tado
 
     def execute(self, message: Message):
 
@@ -93,7 +97,7 @@ class Worker:
             self.logger.debug('Tado zones that need to be updated due to changed events: %s', zones_outdated)
 
         # generate weekly schedules for all zones
-        tado = CachingTadoAdapter(TadoAdapter(self.settings.tado), message.full_update)
+        tado = CachingTadoAdapter(self.tado, message.full_update)
         home_schedules = self.generate_schedules_for_all_zones(all_resources_events, from_date, tado)
         tado.set_schedules_for_all_zones(home_schedules)
 

@@ -4,21 +4,42 @@ from datetime import time
 import services.core
 import services.filewatcher
 import services.timer
-import getopt
+import adapter.tado
 import logging, logging.handlers
 from models.settings import CoreSettings
 import sys, time
 
 
 def create_file_log_handler(log_file: str = None) -> logging.Handler:
+    """Configures a daily rotating file logging handler with the given file name.
+
+    Args:
+        log_file (str, optional): The name of the log file. Defaults to None.
+
+    Returns:
+        logging.Handler: A configured logging handler.
+    """
     return configure_log_handler(
         logging.handlers.TimedRotatingFileHandler(log_file, when='d', backupCount=7, encoding='utf-8'))
 
 def create_console_log_handler() -> logging.Handler:
+    """Configures a console logging handler.
+
+    Returns:
+        logging.Handler: A configured logging handler.
+    """
     return configure_log_handler(
         logging.StreamHandler()) # log to stderr
 
 def configure_log_handler(log_handler: logging.Handler) -> logging.Handler:
+    """Sets a logging Formatter for the given logging handler.
+
+    Args:
+        log_handler (logging.Handler): A logging handler which should be configured with a formatter.
+
+    Returns:
+        logging.Handler: A configured logging handler.
+    """
     formatter = logging.Formatter(fmt='%(asctime)s %(name)s %(levelname)s - %(message)s', datefmt='%b %d %H:%M:%S')
     log_handler.setFormatter(formatter)
 
@@ -67,11 +88,13 @@ async def main(argv):
         config = CoreSettings.load_from(config_file)
         polling_minutes = config.churchtools.resources_polling_minutes
 
+        tado = adapter.tado.TadoAdapter()
+
         async with asyncio.TaskGroup() as tg:
             # Save a reference to the result of this function, otherwise it may get
             # garbage collected at any time, even before it’s done
             core_task = tg.create_task(
-                services.core.Service(config_file, queue)
+                services.core.Service(config_file, queue, tado)
                 .run())
 
             timer_task = tg.create_task(
@@ -84,7 +107,7 @@ async def main(argv):
 
             logger.info("Started at %s", time.strftime('%X'))
 
-            queue.put_nowait(services.core.Message())
+            # queue.put_nowait(services.core.Message())
 
     except asyncio.CancelledError:
         logger.info("Exited at %s", time.strftime('%X'))

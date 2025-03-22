@@ -15,9 +15,6 @@ options:
     url: null
     username: null
     password: null
-  tado:
-    username: null
-    password: null
   heating:
     cold: 0.0
     warm: null
@@ -32,9 +29,6 @@ options:
 schema:
   churchtools:
     url: url
-    username: email
-    password: password
-  tado:
     username: email
     password: password
   heating:

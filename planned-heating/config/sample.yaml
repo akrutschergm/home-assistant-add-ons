@@ -1,13 +1,8 @@
-
 churchtools:
   url: "https://my-community.church.tools"
   username: ""
   password: ""
   # resources_polling_minutes: # must be must be a divisor of 60, i.e. 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 or 60. default: 15
-
-tado:
-  username: ""
-  password: ""
 
 heating:
   cold: 17.0 # temperature when the resource is not booked. 0.0 (frost protection) or 5.0 - 25.0
@@ -15,9 +10,9 @@ heating:
   earlystart:
 
 assignments:
-- tadozone: "My Tado Zone"
-  cold:
-  warm: 21.0 # temperature for booked times. 0.0 (frost protection) or 5.0 - 25.0
-  earlystart: "2:30:00" # time to start heating in advance of the start of the booking
-  resources:
-  - "My ChurchTools Resource"
+  - tadozone: "My Tado Zone"
+    cold:
+    warm: 21.0 # temperature for booked times. 0.0 (frost protection) or 5.0 - 25.0
+    earlystart: "2:30:00" # time to start heating in advance of the start of the booking
+    resources:
+      - "My ChurchTools Resource"
