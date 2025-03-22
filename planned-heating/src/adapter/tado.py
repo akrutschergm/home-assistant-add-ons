@@ -1,5 +1,7 @@
 from datetime import time
 import logging
+
+import PyTado.interface
 from models.schedules import DailySchedule
 from models.tadoschedules import HomeSchedules, ZoneSchedules
 from PyTado.interface import Tado
@@ -59,9 +61,8 @@ class TadoAdapter:
     def _activate_device(self) -> Tado:
         tado = Tado()
         self.logger.info("Device activation status: %s", tado.device_activation_status())
-        self.logger.info("Device verification URL: %s", tado.device_verification_url())
+        self.logger.warning("ATTENTION: Please activate this device using the verification URL: %s", tado.device_verification_url())
 
-        self.logger.info("Starting device activation")
         tado.device_activation()
 
         self.logger.info("Device activation status: %s", tado.device_activation_status())
@@ -78,10 +79,10 @@ class TadoAdapter:
         return zone_ids
 
     def get_zone_id(self, zone_name: str) -> int:
-        return self._get_zone_ids()[zone_name]
+        return self.zone_ids()[zone_name]
 
     def get_zone_name(self, zone_id: int) -> str:
-        return next(name for name, id in self._get_zone_ids().items() if id == zone_id)
+        return next(name for name, id in self.zone_ids().items() if id == zone_id)
 
 
     def set_schedules_for_all_zones(self, home_schedules: HomeSchedules) -> None:
