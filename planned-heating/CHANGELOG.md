@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+- Fixed a bug when getting Tado zone ids
+
 ## 0.4.1
 
 - Reduced multiple API calls to get Tado zones
