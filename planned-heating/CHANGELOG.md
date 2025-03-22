@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Reduced multiple API calls to get Tado zones
+
 ## 0.4.0
 
 - Tado device flow now replaces username and password login procedure
