@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- Restored churchtools settings as optional settings
+
 ## 0.5.0
 
 - Changed config elements - BREAKING!

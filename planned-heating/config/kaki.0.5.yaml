@@ -1,0 +1,70 @@
+polling_minutes: 5
+schedules: []
+ical_calendars:
+  - source: >-
+      https://vg-sh.church.tools/?q=public/cr_ical&security=PR8Pv2arR0Y4ppAp7S4OQKugsomDFHqq&id=70
+    name: Saal
+  - source: >-
+      https://vg-sh.church.tools/?q=public/cr_ical&security=XvncfKdYSOQdM5mrTPDoRUVOALnecEwY&id=72
+    name: Kleiner Saal
+  - source: >-
+      https://vg-sh.church.tools/?q=public/cr_ical&security=hbHbDFvPL6118WqBej8KuAQ29ZqwfV9G&id=71
+    name: Küche
+  - source: >-
+      https://vg-sh.church.tools/?q=public/cr_ical&security=dQ6LthOtSIhkWeQ8oWSuACcvgVDqedGu&id=73
+    name: Kinderstunde
+  - source: >-
+      https://vg-sh.church.tools/?q=public/cr_ical&security=Q5dSZEqfJg3O6J15noYiWDl7BGWLxXpq&id=74
+    name: Teenkreis
+churchtools: {}
+heating:
+  cold: 0
+  warm: 20
+  earlystart: "01:00:00"
+assignments:
+  - tadozone: Saal
+    earlystart: "04:00:00"
+    calendar_names:
+      - Saal
+  - tadozone: Saalbühne
+    calendar_names:
+      - Saal
+  - tadozone: Kleiner Saal
+    earlystart: "02:30:00"
+    calendar_names:
+      - Kleiner Saal
+  - tadozone: Küche
+    warm: 19
+    calendar_names:
+      - Saal
+      - Kleiner Saal
+      - Küche
+  - tadozone: Foyer
+    warm: 19
+    calendar_names:
+      - Saal
+      - Kleiner Saal
+      - Küche
+  - tadozone: WC Foyer
+    calendar_names:
+      - Saal
+      - Kleiner Saal
+      - Küche
+  - tadozone: Kellertreppe
+    warm: 15
+    calendar_names:
+      - Saal
+      - Kleiner Saal
+      - Küche
+      - Kinderstunde
+      - Teenkreis
+  - tadozone: Kinderraum
+    cold: 15
+    calendar_names:
+      - Kinderstunde
+  - tadozone: Jugendraum
+    cold: 15
+    warm: 21
+    earlystart: "02:00:00"
+    calendar_names:
+      - Teenkreis

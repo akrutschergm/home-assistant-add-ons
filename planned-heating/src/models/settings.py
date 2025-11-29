@@ -49,12 +49,14 @@ class ICalSettings(BaseModel):
 
 
 class ChurchToolsSettings(BaseModel):
-    url: str
+    url: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
 
 
 class CoreSettings(BaseModel):
     polling_minutes: Optional[int] = 15
-    schedules: Optional[List[SchedulesSettings]] = None
+    schedules: Optional[List[SchedulesSettings]] = []
     ical_calendars: Optional[List[ICalSettings]] = []
     churchtools: Optional[ChurchToolsSettings] = None
     heating: Optional[HeatingSettings] = None
