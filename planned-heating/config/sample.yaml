@@ -1,18 +1,24 @@
-churchtools:
-  url: "https://my-community.church.tools"
-  username: ""
-  password: ""
-  # resources_polling_minutes: # must be must be a divisor of 60, i.e. 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 or 60. default: 15
-
+polling_minutes: 15
+schedules:
+  - name: "Office Room Schedule"
+    start: "06:00:00"
+    end: "20:00:00"
+    days_of_week: Mon-Thu,Sat
+ical_calendars:
+  - name: "Meeting Room Bookings"
+    source: "https://example.com/ical/metering_room_bookings.ics"
+churchtools: {}
 heating:
   cold: 17.0 # temperature when the resource is not booked. 0.0 (frost protection) or 5.0 - 25.0
-  warm:
-  earlystart:
-
+  warm: 20
+  earlystart: "00:30:00"
 assignments:
-  - tadozone: "My Tado Zone"
+  - tadozone: "Office Room"
     cold:
     warm: 21.0 # temperature for booked times. 0.0 (frost protection) or 5.0 - 25.0
     earlystart: "2:30:00" # time to start heating in advance of the start of the booking
-    resources:
-      - "My ChurchTools Resource"
+    calendar_names:
+      - "Office Room Schedule"
+  - tadozone: "Meeting Room"
+    calendar_names:
+      - "Meeting Room Bookings"

@@ -33,26 +33,38 @@ class HeatingSettings(BaseModel):
 
 class AssignmentSettings(HeatingSettings):
     tadozone: str
-    resources: List[str] = []
+    calendar_names: List[str] = []
+
+
+class SchedulesSettings(BaseModel):
+    start: time
+    end: time
+    days_of_week: str
+    name: str
+
+
+class ICalSettings(BaseModel):
+    source: str
+    name: str
 
 
 class ChurchToolsSettings(BaseModel):
     url: str
-    username: str
-    password: str
-    resources_polling_minutes: Optional[int] = 15
-
-    @field_validator('resources_polling_minutes')
-    def resources_polling_minutes_in_range(cls, v):
-        if not v or (v > 60) or (60 % v):
-            raise ValueError('resources_polling_minutes must be must be a divisor of 60, i.e. 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 or 60')
-        return v
 
 
 class CoreSettings(BaseModel):
-    churchtools: ChurchToolsSettings
+    polling_minutes: Optional[int] = 15
+    schedules: Optional[List[SchedulesSettings]] = None
+    ical_calendars: Optional[List[ICalSettings]] = []
+    churchtools: Optional[ChurchToolsSettings] = None
     heating: Optional[HeatingSettings] = None
     assignments: List[AssignmentSettings] = []
+
+    @field_validator('polling_minutes')
+    def polling_minutes_in_range(cls, v):
+        if not v or (v > 60) or (60 % v):
+            raise ValueError('polling_minutes must be must be a divisor of 60, i.e. 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 or 60')
+        return v
 
     @classmethod
     def load_from(cls, filename: str):

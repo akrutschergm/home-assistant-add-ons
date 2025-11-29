@@ -8,13 +8,11 @@ class Service:
     logger: logging.Logger = logging.getLogger(__name__)
     file_path: str
     queue: asyncio.Queue
-    message: Message
     interval: float
     
-    def __init__(self, file_path: str, queue: asyncio.Queue, message: Message, interval: float = 1):
+    def __init__(self, file_path: str, queue: asyncio.Queue, interval: float = 1):
         self.file_path = file_path
         self.queue = queue
-        self.message = message
         self.interval = interval
 
     async def run(self):
@@ -30,7 +28,7 @@ class Service:
                     current_modified = os.path.getmtime(self.file_path)
                     if not last_modified or current_modified != last_modified:
                         self.logger.debug('File "%s" has changed. Submitting work. Payload: %s', self.file_path, self.message)
-                        self.queue.put_nowait(self.message)
+                        self.queue.put_nowait(Message(config_changed = True))
 
                         last_modified = current_modified
                 

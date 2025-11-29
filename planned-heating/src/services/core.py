@@ -1,10 +1,14 @@
+from adapter import event_generator
 import adapter.churchtools
 from adapter.tado import TadoAdapter
 from adapter.tadocache import CachingTadoAdapter
+from adapter.ical_retriever import ICalRetriever
+from adapter.event_generator import EventGenerator
 import asyncio
 from datetime import date, datetime, time, timedelta
+from functools import reduce
 import logging, logging.handlers
-from models.events import AllResourcesEvents
+from models.events import AllCalendarEvents
 from models.schedules import DailySchedule
 from models.settings import CoreSettings
 from models.tadoschedules import ZoneSchedules, HomeSchedules
@@ -73,42 +77,62 @@ class Worker:
         from_date = datetime.now().date()
         to_date = from_date + timedelta(days=6)
 
-        assigned_resource_names = set[str]
-        for a in self.settings.assignments:
-            assigned_resource_names = assigned_resource_names.union(set(a.resources))
+        all_events = AllCalendarEvents()
 
-        ct = adapter.churchtools.ResourceBookingsRetriever(self.settings.churchtools)
-        all_resources_events, resources_having_updates = \
-            ct.retrieve_events_of_all_resources(assigned_resource_names, from_date, to_date)
+        if self.settings.schedules:
+            all_events = \
+                EventGenerator(self.settings.schedules) \
+                    .generate_events(from_date, to_date)
 
-        if resources_having_updates:
-            self.logger.info('ChurchTools Resources having updates: %s', resources_having_updates)
+        having_updates = False
+
+        # retrieve events from iCal calendars
+        if self.settings.ical_calendars:
+            all_calendar_events, calendars_having_updates = \
+                ICalRetriever(self.settings.ical_calendars) \
+                    .retrieve_events(from_date, to_date)
+            if calendars_having_updates:
+                having_updates = calendars_having_updates
+            all_events.events.update(all_calendar_events.events)
+
+        # retrieve bookings from ChurchTools resources
+        if self.settings.churchtools and self.settings.churchtools.url:
+            all_resources_events, resources_having_updates = \
+                adapter.churchtools.ResourceBookingsRetriever(self.settings.churchtools) \
+                    .retrieve_events_of_all_resources(assigned_resource_names, from_date, to_date)
+            if calendars_having_updates:
+                having_updates = calendars_having_updates
+            all_events.events.update(all_resources_events.events)
+
+        if message.full_update:
+            self.logger.info('Performing a full update of all Tado zones.')
+        elif message.config_changed:
+            self.logger.info('Configuration changed. Performing a full update of all Tado zones.')
+        elif having_updates:
+            # are there any required resources having updates? (set intersection)
+            zones_outdated = set([a.tadozone for a in self.settings.assignments if set(a.calendar_names) & calendars_having_updates])
+            if zones_outdated:
+                self.logger.debug('Tado zones that need to be updated due to Calendar updates: %s', zones_outdated)
+            else:
+                self.logger.info('No Calendar has relevant updates. All Tado zones are up to date.')
+                return
         else:
-            self.logger.info('ChurchTools Resources do not have updates')
-
-        # are there any required resources having updates? (set intersection)
-        zones_outdated = set([a.tadozone for a in self.settings.assignments if set(a.resources) & resources_having_updates])
-        if not message.full_update and not message.config_changed and not zones_outdated:
-            if resources_having_updates:
-                self.logger.info('All Tado zones are up to date.')
-            return
-
-        if zones_outdated:
-            self.logger.debug('Tado zones that need to be updated due to changed events: %s', zones_outdated)
+            self.logger.info('No Calendar has updates. All Tado zones are up to date.')
 
         # generate weekly schedules for all zones
         tado = CachingTadoAdapter(self.tado, message.full_update)
-        home_schedules = self.generate_schedules_for_all_zones(all_resources_events, from_date, tado)
+        home_schedules = self.generate_schedules_for_all_zones(all_events, from_date, tado)
+        self.logger.debug('Updated set of schedules: %s', home_schedules)
         tado.set_schedules_for_all_zones(home_schedules)
 
 
-    def generate_schedules_for_all_zones(self, all_resources_events: AllResourcesEvents, from_date: date, tado: TadoAdapter) -> HomeSchedules:
+    def generate_schedules_for_all_zones(self, all_resources_events: AllCalendarEvents, from_date: date, tado: TadoAdapter) -> HomeSchedules:
 
         home_schedules = HomeSchedules()
         for a in self.settings.assignments:
 
             # select events from required resources
-            events = all_resources_events.select_events(a.resources)
+            events = all_resources_events.select_events(a.calendar_names)
             warm = a.warm or self.settings.heating.warm
             cold = a.cold or self.settings.heating.cold
             earlystart = a.earlystart or self.settings.heating.earlystart
