@@ -4,7 +4,7 @@ from datetime import date, datetime
 from dateutil import tz
 import json
 import logging, logging.handlers
-from models.events import AllResourcesEvents, Event, ResourceEvents
+from models.events import AllCalendarEvents, Event, CalendarEvents
 from models.settings import ChurchToolsSettings
 import os
 from typing import Optional
@@ -24,25 +24,24 @@ class ResourceBookingsRetriever:
         self.logger.debug('Connected to ChurchTools: %s', self.ct)
 
 
-    def retrieve_events_of_all_resources(self, resource_names: set[str], from_date: date, to_date: date) -> tuple[AllResourcesEvents, set[str]]:
+    def retrieve_events(self, calendar_names: set[str], from_date: date, to_date: date) -> tuple[AllCalendarEvents, set[str]]:
 
         def utc_to_local(dt: datetime) -> datetime:
             return dt.astimezone(tz.tzlocal())
 
         def read_booking(b: Booking) -> Event:
             return Event(
-                begin = utc_to_local(b.calculated.startDate),
+                start = utc_to_local(b.calculated.startDate),
                 end = utc_to_local(b.calculated.endDate),
                 name = b.caption)
 
-        resource_names_and_ids = self.get_resource_ids(resource_names)
+        resource_names_and_ids = self.get_resource_ids(calendar_names)
         bookings_by_resource_name = self.get_bookings_by_resource_name(resource_names_and_ids, from_date, to_date)
 
-        all_resources_events = AllResourcesEvents()
+        all_resources_events = AllCalendarEvents()
         for resource_name, bookings in sorted(bookings_by_resource_name.items()):
-            all_resources_events.resource_events[resource_name] = \
-                ResourceEvents(name = resource_name,
-                               id = resource_names_and_ids[resource_name],
+            all_resources_events.events[resource_name] = \
+                CalendarEvents(name = resource_name,
                                events = list([read_booking(b) for b in bookings]))
         self.logger.debug('calendar events of all used resources: %s', all_resources_events)
 
@@ -60,7 +59,9 @@ class ResourceBookingsRetriever:
         # query ChurchTools for resources
         if not self.cached_resources:
             self.logger.debug('Getting resources from masterdata')
-            _, self.cached_resources = self.ct.resources.masterdata()
+            resource_types, self.cached_resources = self.ct.resources.masterdata()
+            self.logger.debug('resource types: %s', resource_types)
+            self.logger.debug('resources: %s', self.cached_resources)
 
         resource_names_and_ids = {}
         for name in resource_names:
@@ -88,13 +89,13 @@ class ResourceBookingsRetriever:
         return bookings_by_name
 
 
-    def determine_resources_having_updates(self, all_resources_events: AllResourcesEvents) -> set[str]:
+    def determine_resources_having_updates(self, all_resources_events: AllCalendarEvents) -> set[str]:
         all_resources_events_from_cache = self.read_all_resources_events_from_cache()
 
         changed_resources = set()
-        for resource_name in all_resources_events.resource_events:
-            if (resource_name not in all_resources_events_from_cache.resource_events or
-                all_resources_events.resource_events[resource_name] != all_resources_events_from_cache.resource_events[resource_name]):
+        for resource_name in all_resources_events.events:
+            if (resource_name not in all_resources_events_from_cache.events or
+                all_resources_events.events[resource_name] != all_resources_events_from_cache.events[resource_name]):
                 changed_resources.add(resource_name)
 
         return changed_resources
@@ -103,7 +104,7 @@ class ResourceBookingsRetriever:
     def all_resources_events_cache_file_name(self) -> str:
         return './.cache/churchtools_resource_events.json'
 
-    def read_all_resources_events_from_cache(self) -> AllResourcesEvents:
+    def read_all_resources_events_from_cache(self) -> AllCalendarEvents:
 
         # step 1: Read the file. Since file is small, we are doing a whole read.
         try:
@@ -112,16 +113,16 @@ class ResourceBookingsRetriever:
                 json_str = json.load(stream) # -> Dict[Any, Any]
 
             # step 3: Change dictionary into class
-            return AllResourcesEvents(**json_str)
+            return AllCalendarEvents(**json_str)
 
         except FileNotFoundError as exc:
-            return AllResourcesEvents()
+            return AllCalendarEvents()
 
         except json.JSONDecodeError as exc:
             self.logger.error(exc)
-            return AllResourcesEvents()
+            return AllCalendarEvents()
 
-    def write_all_resources_events_to_cache(self, all_resources_events: AllResourcesEvents) -> None:
+    def write_all_resources_events_to_cache(self, all_resources_events: AllCalendarEvents) -> None:
         json_data = all_resources_events.model_dump(mode = 'json')
         json_str = json.dumps(json_data)
         cache_filename = self.all_resources_events_cache_file_name()

@@ -7,12 +7,10 @@ class Service:
     logger: logging.Logger = logging.getLogger(__name__)
     minutes: float
     queue: asyncio.Queue
-    message: Message
 
-    def __init__(self, minutes: float, queue: asyncio.Queue, message: Message):
+    def __init__(self, minutes: float, queue: asyncio.Queue):
         self.minutes = minutes
         self.queue = queue
-        self.message = message
 
     async def run(self):
         def get_delay(seconds: float) -> tuple[datetime, float]:
@@ -30,15 +28,18 @@ class Service:
 
         try:
             dt, delay = get_delay(10)
+            first_run = True
 
             while True:
                 self.logger.debug("Waiting until %s", dt)
                 await asyncio.sleep(delay)
 
-                self.logger.debug('Submitting work. Message: %s', self.message)
-                self.queue.put_nowait(self.message)
+                message = Message(full_update = first_run)
+                self.logger.debug('Submitting work. Message: %s', message)
+                self.queue.put_nowait(message)
 
                 dt, delay = get_delay_to_next_full_minutes()
+                first_run = False
 
         except asyncio.CancelledError:
             pass

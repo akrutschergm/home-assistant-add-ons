@@ -86,7 +86,7 @@ async def main(argv):
         queue = asyncio.Queue()
 
         config = CoreSettings.load_from(config_file)
-        polling_minutes = config.churchtools.resources_polling_minutes
+        polling_minutes = config.polling_minutes
 
         tado = adapter.tado.TadoAdapter()
 
@@ -98,11 +98,11 @@ async def main(argv):
                 .run())
 
             timer_task = tg.create_task(
-                services.timer.Service(polling_minutes, queue, message = services.core.Message())
+                services.timer.Service(polling_minutes, queue)
                 .run())
 
             config_file_changes_task = tg.create_task(
-                services.filewatcher.Service(config_file, queue, message = services.core.Message(config_changed = True))
+                services.filewatcher.Service(config_file, queue)
                 .run())
 
             logger.info("Started at %s", time.strftime('%X'))

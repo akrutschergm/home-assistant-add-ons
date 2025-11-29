@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- Changed config elements - BREAKING!
+- Added fixed schedules
+- Added iCal support for files and URLs
+
 ## 0.4.4
 
 - Fixed not having integrated both fixes

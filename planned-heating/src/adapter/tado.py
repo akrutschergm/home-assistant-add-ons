@@ -69,7 +69,7 @@ class TadoAdapter:
         return tado
 
     def _get_zone_ids(self) -> dict[str: int]:
-        self.logger.debug('Gettings zones')
+        self.logger.debug('Getting zones')
 
         zones = self.tado.get_zones()
         self.logger.debug('Tado zones: %s', zones)
@@ -102,8 +102,8 @@ class TadoAdapter:
 
 
     def set_schedule_for_zone_and_day(self, zone_name: str, zone_id: int, weekday: int, schedule: DailySchedule) -> None:
-        day_type = get_tado_day_type(weekday)
-        self.logger.info('Setting schedule for Tado zone "%s" (%d) for %s', zone_name, zone_id, day_type)
+        day_type = get_tado_day_type(weekday)[:3]
+        self.logger.info('Setting schedule for Tado zone "%s" (%d) for %s: %s', zone_name, zone_id, day_type, schedule.to_string())
 
         tado_schedule = _to_tado_schedule(day_type, schedule)
         self.logger.debug('Schedule: %s', tado_schedule)

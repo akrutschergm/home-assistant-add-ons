@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: lanned-heating/main.py",
+            "name": "Python Debugger: planned-heating/main.py",
             "type": "debugpy",
             "request": "launch",
             "program": "./planned-heating/src/main.py",
