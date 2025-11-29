@@ -10,6 +10,7 @@ from pathlib import Path
 import requests
 from typing import List, Optional
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 
 class ICalRetriever:
@@ -42,7 +43,7 @@ class ICalRetriever:
             cal = self.load_ics(setting.source)
             
             # Extract events from the iCalendar.
-            events = self.get_events_from_ics(cal)
+            events = self.get_events_from_ics(cal, ZoneInfo("Europe/Berlin"))
 
             # Filter events by the specified date range.
             events = list(filter(lambda e: e.start.date() <= day_end and e.end.date() >= day_start, events))
@@ -86,7 +87,7 @@ class ICalRetriever:
         return Calendar.from_ical(data)
 
 
-    def get_events_from_ics(self, calendar: Calendar) -> list[Event]:
+    def get_events_from_ics(self, calendar: Calendar, to_tz: ZoneInfo) -> list[Event]:
         events = []
         for component in calendar.walk():
             if component.name == "VEVENT":
@@ -99,6 +100,9 @@ class ICalRetriever:
                     start = datetime.combine(start, datetime.min.time())
                 if isinstance(end, date) and not isinstance(end, datetime):
                     end = datetime.combine(end, datetime.min.time())
+
+                start = start.astimezone(to_tz)
+                end = end.astimezone(to_tz)
 
                 events.append(Event(
                     start = start.replace(tzinfo=tz.tzlocal()),

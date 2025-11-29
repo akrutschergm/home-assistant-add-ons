@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.3
+
+- Fixed: Convert iCal event to local time
+
 ## 0.5.2
 
 - Changed that tado schedules are only set when updates are available
