@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.2
+
+- Changed that tado schedules are only set when updates are available
+
 ## 0.5.1
 
 - Restored churchtools settings as optional settings

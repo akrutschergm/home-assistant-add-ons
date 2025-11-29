@@ -27,10 +27,14 @@ Create the environment:
 python -m venv .venv
 ```
 
-Activate it:
+If VS Code not automatically detects it:
+Ctrl + Shift + P → Python: Select Interpreter → ./.venv/bin/python
+Or in a new terminal type:
 ```
 .\.venv\Scripts\activate
 ```
 
-If VS Code not automatically detects it:
-Ctrl + Shift + P → Python: Select Interpreter → ./.venv/bin/python
+Restore libraries
+```
+pip install -r ./planned-heating/requirements.txt
+```
