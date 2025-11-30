@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.5
+
+- Fixed tado day type
+
 ## 0.5.4
 
 - Fixed updating tado zones
