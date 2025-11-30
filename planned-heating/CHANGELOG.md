@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.4
+
+- Fixed updating tado zones
+
 ## 0.5.3
 
 - Fixed: Convert iCal event to local time

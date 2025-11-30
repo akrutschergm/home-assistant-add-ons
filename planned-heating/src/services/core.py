@@ -125,7 +125,7 @@ class Worker:
         tado = CachingTadoAdapter(self.tado, message.full_update)
         home_schedules = self.generate_schedules_for_all_zones(all_events, from_date, tado)
         self.logger.debug('Updated set of schedules: %s', home_schedules)
-        #tado.set_schedules_for_all_zones(home_schedules)
+        tado.set_schedules_for_all_zones(home_schedules)
 
 
     def generate_schedules_for_all_zones(self, all_resources_events: AllCalendarEvents, from_date: date, tado: TadoAdapter) -> HomeSchedules:
