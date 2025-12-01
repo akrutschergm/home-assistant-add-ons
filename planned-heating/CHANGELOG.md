@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.6
+
+- New: Use refresh token for tado login
+
 ## 0.5.5
 
 - Fixed tado day type
