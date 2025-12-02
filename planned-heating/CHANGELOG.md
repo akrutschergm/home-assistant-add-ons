@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.5.6
+
+- New: Use refresh token for tado login
+
+## 0.5.5
+
+- Fixed tado day type
+
+## 0.5.4
+
+- Fixed updating tado zones
+
+## 0.5.3
+
+- Fixed: Convert iCal event to local time
+
+## 0.5.2
+
+- Changed that tado schedules are only set when updates are available
+
+## 0.5.1
+
+- Restored churchtools settings as optional settings
+
 ## 0.5.0
 
 - Changed config elements - BREAKING!

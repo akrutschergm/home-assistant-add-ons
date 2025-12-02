@@ -97,11 +97,12 @@ class Worker:
 
         # retrieve bookings from ChurchTools resources
         if self.settings.churchtools and self.settings.churchtools.url:
+            potential_resource_names = reduce(lambda acc, a: acc.union(set(a.calendar_names)), self.settings.assignments, set()) 
             all_resources_events, resources_having_updates = \
                 adapter.churchtools.ResourceBookingsRetriever(self.settings.churchtools) \
-                    .retrieve_events_of_all_resources(assigned_resource_names, from_date, to_date)
-            if calendars_having_updates:
-                having_updates = calendars_having_updates
+                    .retrieve_events(potential_resource_names, from_date, to_date)
+            if resources_having_updates:
+                having_updates = resources_having_updates
             all_events.events.update(all_resources_events.events)
 
         if message.full_update:
@@ -118,6 +119,7 @@ class Worker:
                 return
         else:
             self.logger.info('No Calendar has updates. All Tado zones are up to date.')
+            return
 
         # generate weekly schedules for all zones
         tado = CachingTadoAdapter(self.tado, message.full_update)

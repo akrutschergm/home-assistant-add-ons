@@ -24,7 +24,7 @@ class ResourceBookingsRetriever:
         self.logger.debug('Connected to ChurchTools: %s', self.ct)
 
 
-    def retrieve_events(self, calendar_names: set[str], from_date: date, to_date: date) -> tuple[AllCalendarEvents, set[str]]:
+    def retrieve_events(self, potential_names: set[str], from_date: date, to_date: date) -> tuple[AllCalendarEvents, set[str]]:
 
         def utc_to_local(dt: datetime) -> datetime:
             return dt.astimezone(tz.tzlocal())
@@ -35,7 +35,7 @@ class ResourceBookingsRetriever:
                 end = utc_to_local(b.calculated.endDate),
                 name = b.caption)
 
-        resource_names_and_ids = self.get_resource_ids(calendar_names)
+        resource_names_and_ids = self.get_resource_ids(potential_names)
         bookings_by_resource_name = self.get_bookings_by_resource_name(resource_names_and_ids, from_date, to_date)
 
         all_resources_events = AllCalendarEvents()
@@ -54,7 +54,7 @@ class ResourceBookingsRetriever:
         return (all_resources_events, resources_having_updates)
 
 
-    def get_resource_ids(self, resource_names: list[str]) -> dict[str: int]:
+    def get_resource_ids(self, potential_names: list[str]) -> dict[str: int]:
 
         # query ChurchTools for resources
         if not self.cached_resources:
@@ -64,11 +64,10 @@ class ResourceBookingsRetriever:
             self.logger.debug('resources: %s', self.cached_resources)
 
         resource_names_and_ids = {}
-        for name in resource_names:
+        for name in potential_names:
             resource_id = next((r.id for r in self.cached_resources if r.name == name), None)
             if not resource_id:
-                raise ValueError(f'Resource with name "{name}" not found in ChurchTools.')
-            resource_names_and_ids[name] = resource_id
+                resource_names_and_ids[name] = resource_id
 
         self.logger.debug('resources: %s', resource_names_and_ids)
         return resource_names_and_ids
