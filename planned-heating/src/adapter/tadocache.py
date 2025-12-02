@@ -10,10 +10,12 @@ class CachingTadoAdapter:
     logger: logging.Logger = logging.getLogger(__name__)
     current_schedules: HomeSchedules = None
     tado_adapter: TadoAdapter
+    data_dir: str
     full_update: bool
 
-    def __init__(self, tado_adapter: TadoAdapter, full_update: bool = False):
+    def __init__(self, tado_adapter: TadoAdapter, data_dir: str = None, full_update: bool = False) -> None:
         self.tado_adapter = tado_adapter
+        self.data_dir = data_dir or "./.cache"
         self.full_update = full_update
 
     def get_zone_id(self, zone_name: str) -> int:
@@ -73,7 +75,7 @@ class CachingTadoAdapter:
         return self.current_schedules
 
     def _schedules_cache_file_name(self) -> str:
-        return "./.cache/tado_schedules.json"
+        return os.path.join(self.data_dir, "tado_schedules.json")
 
     def _read_current_schedules_from_cache(self, file_name: str) -> HomeSchedules:
         # step 1: Read the file. Since file is small, we are doing a whole read.

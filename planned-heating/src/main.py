@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 import asyncio
 from datetime import time
 import services.core
@@ -7,8 +7,30 @@ import services.timer
 import adapter.tado
 import logging, logging.handlers
 from models.settings import CoreSettings
+import os
 import sys, time
 
+
+DEFAULT_DATA_DIR = os.path.normpath("./.cache")
+
+def valid_path(value: str | None) -> str:
+    # If user did not provide the argument (argparse still calls type with the value),
+    # treat empty or None as "use the default".
+    if value in (None, ""):
+        return DEFAULT_DATA_DIR
+
+    # Normalize to handle things like "./dir"
+    norm = os.path.normpath(value)
+
+    # Reject absolute paths
+    #if os.path.isabs(norm):
+    #    raise ArgumentTypeError("Path must be relative, not absolute.")
+
+    # Must exist and be a directory
+    if not os.path.isdir(norm):
+        raise ArgumentTypeError(f"Relative path does not exist or is not a directory: {value}")
+
+    return norm
 
 def create_file_log_handler(log_file: str = None) -> logging.Handler:
     """Configures a daily rotating file logging handler with the given file name.
@@ -75,11 +97,16 @@ async def main(argv):
     parsers = [logging_argparse]
     main_parser = ArgumentParser(prog=__file__, parents=parsers)
     main_parser.add_argument('-c', '--config-file')
+    main_parser.add_argument('-d', '--data-dir', type=valid_path, default=None,  # type() handles the default substitution
+        help="Relative path to the data directory (defaults to ./.data)."
+    )
     main_args = main_parser.parse_args(argv)
 
     config_file = main_args.config_file
+    data_dir = main_args.data_dir
 
     logger.info("Config file is: {}".format(config_file))
+    logger.info("data directory is: {}".format(data_dir))
 
     try:
         # Create a queue that we will use to store our "workload".
@@ -88,7 +115,7 @@ async def main(argv):
         config = CoreSettings.load_from(config_file)
         polling_minutes = config.polling_minutes
 
-        tado = adapter.tado.TadoAdapter()
+        tado = adapter.tado.TadoAdapter(data_dir=data_dir)
 
         async with asyncio.TaskGroup() as tg:
             # Save a reference to the result of this function, otherwise it may get

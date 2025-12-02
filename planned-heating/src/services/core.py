@@ -89,7 +89,7 @@ class Worker:
         # retrieve events from iCal calendars
         if self.settings.ical_calendars:
             all_calendar_events, calendars_having_updates = \
-                ICalRetriever(self.settings.ical_calendars) \
+                ICalRetriever(self.settings.ical_calendars, data_dir=self.data_dir) \
                     .retrieve_events(from_date, to_date)
             if calendars_having_updates:
                 having_updates = calendars_having_updates
@@ -122,7 +122,7 @@ class Worker:
             return
 
         # generate weekly schedules for all zones
-        tado = CachingTadoAdapter(self.tado, message.full_update)
+        tado = CachingTadoAdapter(self.tado, data_dir=self.data_dir, full_update=message.full_update)
         home_schedules = self.generate_schedules_for_all_zones(all_events, from_date, tado)
         self.logger.debug('Updated set of schedules: %s', home_schedules)
         tado.set_schedules_for_all_zones(home_schedules)

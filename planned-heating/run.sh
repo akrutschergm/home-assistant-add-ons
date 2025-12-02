@@ -2,4 +2,4 @@
 
 bashio::log.info "Starting..."
 
-python3 /code/main.py -c /data/options.json
+python3 /code/main.py -c /data/options.json -d /data

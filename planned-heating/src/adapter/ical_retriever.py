@@ -16,10 +16,12 @@ from zoneinfo import ZoneInfo
 class ICalRetriever:
     logger: logging.Logger = logging.getLogger(__name__)
     settings: List[ICalSettings]
+    data_dir: str
     cached_calendars: Optional[list[any]] = None
 
-    def __init__(self, settings: List[ICalSettings]):
+    def __init__(self, settings: List[ICalSettings], data_dir: str = None) -> None:
         self.settings = settings
+        self.data_dir = data_dir or "./.cache"
 
 
     def retrieve_events(self, day_start: date, day_end: date) -> tuple[AllCalendarEvents, set[str]]:
@@ -122,7 +124,7 @@ class ICalRetriever:
         return changed_calendars
 
     def all_calendars_events_cache_file_name(self) -> str:
-        return './.cache/ical_calendar_events.json'
+        return os.path.join(self.data_dir, "ical_calendar_events.json")
 
     def read_from_cache(self) -> AllCalendarEvents:
 

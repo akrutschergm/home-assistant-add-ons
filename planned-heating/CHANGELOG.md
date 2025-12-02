@@ -1,5 +1,10 @@
 # Changelog
 
+## unreleased
+
+- New: Save tado refresh token, cached schedules and iCal data in persistent data folder
+- New: Cache folder can be set by argument also on non-HA installations.
+
 ## 0.5.6
 
 - New: Use refresh token for tado login

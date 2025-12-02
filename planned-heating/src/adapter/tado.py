@@ -1,8 +1,8 @@
 from datetime import time
 import logging
-
 from models.schedules import DailySchedule
 from models.tadoschedules import HomeSchedules, ZoneSchedules
+import os
 from PyTado.interface import Tado
 import PyTado.const
 
@@ -38,7 +38,7 @@ class TadoAdapter:
     logger: logging.Logger = logging.getLogger(__name__)
     tado: Tado = None
     zone_ids: dict[str: int] = None
-
+    data_dir: str = None
     TIMETABLE_MON_TO_SUN = 0
     TIMETABLE_MON_TO_FRI_SAT_SUN = 1
     TIMETABLE_MON_TUE_WED_THU_FRI_SAT_SUN = 2
@@ -53,12 +53,13 @@ class TadoAdapter:
     # DAY_TYPE_SATURDAY = 'SATURDAY'
     # DAY_TYPE_SUNDAY = 'SUNDAY'
 
-    def __init__(self):
+    def __init__(self, data_dir: str = None) -> None:
+        self.data_dir = data_dir or "./.cache"
         self.tado = self._activate_device()
         self.zone_ids = self._get_zone_ids()
 
     def _refresh_token_file_name(self) -> str:
-        return "./.cache/tado_refresh_token"
+        return os.path.join(self.data_dir, "tado_refresh_token.json")
 
     def _activate_device(self) -> Tado:
         tado = Tado(token_file_path=self._refresh_token_file_name())
