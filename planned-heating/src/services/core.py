@@ -29,11 +29,13 @@ class Service:
     config_file: str
     queue: asyncio.Queue
     tado: TadoAdapter
+    data_dir: str
 
-    def __init__(self, config_file: str, queue: asyncio.Queue, tado: TadoAdapter):
+    def __init__(self, config_file: str, queue: asyncio.Queue, tado: TadoAdapter, data_dir: str = None):
         self.config_file = config_file
         self.queue = queue
         self.tado = tado
+        self.data_dir = data_dir
 
     async def run(self):
         try:
@@ -47,7 +49,7 @@ class Service:
                     config = CoreSettings.load_from(self.config_file)
 
                     self.logger.debug('Starting work, message: %s', msg)
-                    Worker(config, self.tado).execute(msg)
+                    Worker(config, self.tado, self.data_dir).execute(msg)
 
                     duration = time.monotonic() - started_at
                     self.logger.debug('Finished work after %.2f seconds', duration)
@@ -67,10 +69,12 @@ class Worker:
     logger: logging.Logger = logging.getLogger(__name__)
     settings: CoreSettings
     tado: TadoAdapter
+    data_dir: str
 
-    def __init__(self, settings: CoreSettings, tado: TadoAdapter):
+    def __init__(self, settings: CoreSettings, tado: TadoAdapter, data_dir: str = None):
         self.settings = settings
         self.tado = tado
+        self.data_dir = data_dir
 
     def execute(self, message: Message):
 

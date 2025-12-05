@@ -121,11 +121,11 @@ async def main(argv):
             # Save a reference to the result of this function, otherwise it may get
             # garbage collected at any time, even before it’s done
             core_task = tg.create_task(
-                services.core.Service(config_file, queue, tado)
+                services.core.Service(config_file, queue, tado, data_dir)
                 .run())
 
             timer_task = tg.create_task(
-                services.timer.Service(polling_minutes, queue)
+                services.timer.Service(polling_minutes, queue, config.full_update_on_first_run)
                 .run())
 
             config_file_changes_task = tg.create_task(
