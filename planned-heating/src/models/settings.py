@@ -1,4 +1,3 @@
-
 from datetime import time
 import json
 from pydantic import BaseModel, field_validator
@@ -56,6 +55,7 @@ class ChurchToolsSettings(BaseModel):
 
 class CoreSettings(BaseModel):
     polling_minutes: Optional[int] = 15
+    full_update_on_first_run: Optional[bool] = True
     schedules: Optional[List[SchedulesSettings]] = []
     ical_calendars: Optional[List[ICalSettings]] = []
     churchtools: Optional[ChurchToolsSettings] = None

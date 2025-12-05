@@ -29,11 +29,13 @@ class Service:
     config_file: str
     queue: asyncio.Queue
     tado: TadoAdapter
+    data_dir: str
 
-    def __init__(self, config_file: str, queue: asyncio.Queue, tado: TadoAdapter):
+    def __init__(self, config_file: str, queue: asyncio.Queue, tado: TadoAdapter, data_dir: str = None):
         self.config_file = config_file
         self.queue = queue
         self.tado = tado
+        self.data_dir = data_dir
 
     async def run(self):
         try:
@@ -47,7 +49,7 @@ class Service:
                     config = CoreSettings.load_from(self.config_file)
 
                     self.logger.debug('Starting work, message: %s', msg)
-                    Worker(config, self.tado).execute(msg)
+                    Worker(config, self.tado, self.data_dir).execute(msg)
 
                     duration = time.monotonic() - started_at
                     self.logger.debug('Finished work after %.2f seconds', duration)
@@ -67,10 +69,12 @@ class Worker:
     logger: logging.Logger = logging.getLogger(__name__)
     settings: CoreSettings
     tado: TadoAdapter
+    data_dir: str
 
-    def __init__(self, settings: CoreSettings, tado: TadoAdapter):
+    def __init__(self, settings: CoreSettings, tado: TadoAdapter, data_dir: str = None):
         self.settings = settings
         self.tado = tado
+        self.data_dir = data_dir
 
     def execute(self, message: Message):
 
@@ -89,7 +93,7 @@ class Worker:
         # retrieve events from iCal calendars
         if self.settings.ical_calendars:
             all_calendar_events, calendars_having_updates = \
-                ICalRetriever(self.settings.ical_calendars) \
+                ICalRetriever(self.settings.ical_calendars, data_dir=self.data_dir) \
                     .retrieve_events(from_date, to_date)
             if calendars_having_updates:
                 having_updates = calendars_having_updates
@@ -122,7 +126,7 @@ class Worker:
             return
 
         # generate weekly schedules for all zones
-        tado = CachingTadoAdapter(self.tado, message.full_update)
+        tado = CachingTadoAdapter(self.tado, data_dir=self.data_dir, full_update=message.full_update)
         home_schedules = self.generate_schedules_for_all_zones(all_events, from_date, tado)
         self.logger.debug('Updated set of schedules: %s', home_schedules)
         tado.set_schedules_for_all_zones(home_schedules)
