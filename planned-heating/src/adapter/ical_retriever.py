@@ -78,7 +78,6 @@ class ICalRetriever:
         if parsed.scheme in ("http", "https"):
             response = requests.get(source)
             response.raise_for_status()
-            print(response.headers)
             data = response.content  # Bytes!
         else:
             # Local path
