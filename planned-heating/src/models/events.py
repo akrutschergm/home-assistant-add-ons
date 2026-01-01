@@ -12,12 +12,18 @@ class Event(BaseModel):
 
     # todo: validate end to be > begin
 
+    def to_string(self) -> str:
+        return f'{self.start.isoformat()} - {self.end.isoformat()} {self.name}'
+
 
 class CalendarEvents(BaseModel):
     """Models a PyDantic serializeable calendar with a list of events.
     """
     name: str
     events: list[Event] = []
+
+    def to_string(self) -> str:
+        return self.name + ": " + ' | '.join([e.to_string() for e in self.events]) if self.events else 'no events'
 
 
 class AllCalendarEvents(BaseModel):

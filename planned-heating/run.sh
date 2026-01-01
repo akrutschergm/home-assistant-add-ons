@@ -2,4 +2,7 @@
 
 bashio::log.info "Starting..."
 
-python3 /code/main.py -c /data/options.json -d /data
+CONFIG_PATH=/data/options.json
+LOG_LEVEL="$(bashio::config 'log_level')"
+
+python3 /code/main.py -c /data/options.json -d /data --log-level "$LOG_LEVEL"

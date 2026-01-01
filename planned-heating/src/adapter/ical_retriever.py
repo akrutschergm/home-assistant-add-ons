@@ -57,6 +57,8 @@ class ICalRetriever:
             )
 
         self.logger.debug('events of all calendars in use: %s', all_calendars_events)
+        self.logger.info("Retrieved calendar events:\n\t%s",
+                        "\n\t".join(i.to_string() for i in all_calendars_events.events.values()))
 
         # determine changes in calendar definition or events related to cached version
         calendars_having_updates = self.determine_calendars_having_updates(all_calendars_events)

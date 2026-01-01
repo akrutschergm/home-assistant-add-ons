@@ -48,7 +48,7 @@ class DailySchedule(BaseModel):
         self._validate_blocks()
 
     def to_string(self) -> str:
-        return ', '.join([f'{b.start.strftime("%H:%M")}-{b.end.strftime("%H:%M")} {b.temperature}°C' \
+        return ' | '.join([f'{b.start.strftime("%H:%M")} - {b.end.strftime("%H:%M")} {b.temperature}°C' \
             for b in self.blocks.values()])
 
     def _validate_blocks(self) -> None:
@@ -162,18 +162,19 @@ class DailySchedule(BaseModel):
         earlystart = earlystart or time.min
 
         utc=pytz.UTC
-        from_ = utc.localize(datetime.combine(date_, time.min))
-        to = from_ + timedelta(days=1)
+        dt_from = utc.localize(datetime.combine(date_, time.min))
+        dt_to = dt_from + timedelta(days=1)
 
-        events = list([e for e in events if e.start < to and e.end > from_])
+        events = list([e for e in events if e.start < dt_to or e.end > dt_from])
         schedule = DailySchedule(weekday = date_.weekday(),
                                  blocks = { time.min: Block(temperature = cold)})
 
         for e in events:
-            begin_ = time.min if e.start <= from_ else e.start.time()
+            begin_ = time.min if e.start <= dt_from else e.start.time()
             begin_ = time.min if begin_ <= earlystart else \
                 (datetime.combine(date_, begin_) - timedelta(hours = earlystart.hour, minutes = earlystart.minute)).time()
-            end_ = time.min if e.end >= to else e.end.time()
+            end_ = time.min if e.end >= dt_to else e.end.time()
+
             schedule.insert_block(Block(start = begin_, end = end_, temperature = warm))
 
         return schedule

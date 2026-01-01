@@ -33,6 +33,7 @@ options:
     - tadozone: "Meeting Room"
       calendar_names:
         - "Meeting Room Bookings"
+  log_level: "INFO"
 schema:
   polling_minutes: "int(1,1440)"
   full_update_on_first_run: bool
@@ -59,6 +60,7 @@ schema:
       earlystart: "match(^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$)?"
       calendar_names:
         - str
+  log_level: "list(DEBUG|INFO|WARNING|ERROR|CRITICAL)"
 startup: services
 ports:
   8000/tcp: 8000
