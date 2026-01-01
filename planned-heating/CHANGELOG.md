@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.8
+
+- New: Added log_level config option
+
 ## 0.5.7
 
 - New: Save tado refresh token, cached schedules and iCal data in persistent data folder
