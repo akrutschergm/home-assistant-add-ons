@@ -117,12 +117,12 @@ class Worker:
             # are there any required resources having updates? (set intersection)
             zones_outdated = set([a.tadozone for a in self.settings.assignments if set(a.calendar_names) & calendars_having_updates])
             if zones_outdated:
-                self.logger.debug('Tado zones that need to be updated due to Calendar updates: %s', zones_outdated)
+                self.logger.info('Tado zones that need to be updated due to Calendar updates: %s', zones_outdated)
             else:
-                self.logger.info('No Calendar has relevant updates. All Tado zones are up to date.')
+                self.logger.debug('No Calendar has relevant updates. All Tado zones are up to date.')
                 return
         else:
-            self.logger.info('No Calendar has updates. All Tado zones are up to date.')
+            self.logger.debug('No Calendar has updates. All Tado zones are up to date.')
             return
 
         # generate weekly schedules for all zones

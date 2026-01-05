@@ -45,7 +45,7 @@ class ICalRetriever:
             cal = self.load_ics(setting.source)
             
             # Extract events from the iCalendar.
-            events = self.get_events_from_ics(cal, ZoneInfo("Europe/Berlin"))
+            events = self.get_events_from_ics(cal)
 
             # Filter events by the specified date range.
             events = list(filter(lambda e: e.start.date() <= day_end and e.end.date() >= day_start, events))
@@ -57,8 +57,8 @@ class ICalRetriever:
             )
 
         self.logger.debug('events of all calendars in use: %s', all_calendars_events)
-        self.logger.info("Retrieved calendar events:\n\t%s",
-                        "\n\t".join(i.to_string() for i in all_calendars_events.events.values()))
+        #self.logger.info("Retrieved calendar events:\n\t%s",
+        #                "\n\t".join(i.to_string() for i in all_calendars_events.events.values()))
 
         # determine changes in calendar definition or events related to cached version
         calendars_having_updates = self.determine_calendars_having_updates(all_calendars_events)
@@ -90,7 +90,7 @@ class ICalRetriever:
         return Calendar.from_ical(data)
 
 
-    def get_events_from_ics(self, calendar: Calendar, to_tz: ZoneInfo) -> list[Event]:
+    def get_events_from_ics(self, calendar: Calendar, to_tz: ZoneInfo = None) -> list[Event]:
         events = []
         for component in calendar.walk():
             if component.name == "VEVENT":

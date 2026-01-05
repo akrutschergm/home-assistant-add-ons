@@ -5,6 +5,25 @@ import pytz
 from typing import Dict
 
 
+def round_minutes(t: time, minutes: int) -> time:
+    """Rounds a time to the nearest interval in minutes.
+    
+    Args:
+        t (time): The time to round.
+        minutes (int): The interval in minutes to round to.
+    
+    Returns:
+        time: The rounded time.
+    """
+    total_minutes = t.hour * 60 + t.minute
+    remainder = total_minutes % minutes
+    if remainder < minutes / 2:
+        total_minutes -= remainder
+    else:
+        total_minutes += minutes - remainder
+    
+    return time(total_minutes // 60, total_minutes % 60)
+
 def validate_temperature(temperature: float, required: bool = False) -> None:
     """Validates a temperature to be 0.0 or between 5.0 and 25.0 as it is required by tado.
 
@@ -22,6 +41,11 @@ def validate_temperature(temperature: float, required: bool = False) -> None:
         (temperature < 0.0 or (temperature > 0.0 and temperature < 5.0) or temperature > 25.0):
         raise ValueError('temperature not within the valid range: 0.0, 5.0 - 25.0')
 
+def validate_events(events: list[Event]) -> None:
+    """Validates a list of events."""
+    for e in events:
+        if not e.start or not e.end or e.end <= e.start:
+            raise ValueError('event start or end time is missing or invalid')
 
 class Block(BaseModel):
     """Models a PyDantic serializeable time block with start and end time and temperature.
@@ -30,10 +54,8 @@ class Block(BaseModel):
     end: time = time.min
     temperature: float = 0.0
 
-    def __post_init__(self):
-        # todo: validate the precision of start and end time to be 5 minutes
-        validate_temperature(self.temperature)
-
+    # todo: validate the precision of start and end time to be 5 minutes
+    validate_temperature(temperature)
 
 class DailySchedule(BaseModel):
     """Models a PyDantic serializeable daily schedule, which is a list of contiguous time blocks
@@ -83,7 +105,7 @@ class DailySchedule(BaseModel):
 
         # Für Beginn und Ende: Wenn an der Stelle noch keine Trennung vorliegt, und Temperatur der
         # Zeitscheibe < Ziel-Temperatur des Termins, dann trennen Zeitscheibe
-        if not self.blocks.get(block.end):
+        if block.end > time.min and not self.blocks.get(block.end):
             b = self._get_previous_block(block.end)
             if block.temperature != b.temperature:
                 #print(f'inserting time block starting {to} ending {b.end}, temperature {b.temperature}')
@@ -102,7 +124,7 @@ class DailySchedule(BaseModel):
                 self.blocks[block.start] = block
                 # shorten the timespan of the preceeding time block
                 b.end = block.start
-            elif b.end < block.end:
+            elif b.end != time.min and (block.end == time.min or b.end < block.end):
                 #print(f'changing time block starting {b.start} ending {to}, temperature {temperature}')
                 b.end = block.end
         else:
@@ -112,7 +134,7 @@ class DailySchedule(BaseModel):
             b.end = block.end
 
         # Alle dazwischen liegenden Zeitscheiben löschen.
-        for t in list([t for t in self.blocks.keys() if t > block.start and t < block.end]):
+        for t in list([t for t in self.blocks.keys() if t > block.start and (block.end == time.min or t < block.end)]):
             #b = self.blocks[t]
             #print(f'deleting time block starting {t} ending {b.end}, temperature {b.temperature}')
             del self.blocks[t]
@@ -157,23 +179,27 @@ class DailySchedule(BaseModel):
 
         validate_temperature(warm, required = True)
         validate_temperature(cold)
+        validate_events(events)
 
         cold = cold or 0.0
         earlystart = earlystart or time.min
 
-        utc=pytz.UTC
-        dt_from = utc.localize(datetime.combine(date_, time.min))
+        tz=pytz.UTC
+        dt_from = tz.localize(datetime.combine(date_, time.min))
         dt_to = dt_from + timedelta(days=1)
 
-        events = list([e for e in events if e.start < dt_to or e.end > dt_from])
+        filtered_events = list([e for e in events if e.start < dt_to and e.end > dt_from])
         schedule = DailySchedule(weekday = date_.weekday(),
                                  blocks = { time.min: Block(temperature = cold)})
 
-        for e in events:
+        for e in filtered_events:
             begin_ = time.min if e.start <= dt_from else e.start.time()
             begin_ = time.min if begin_ <= earlystart else \
                 (datetime.combine(date_, begin_) - timedelta(hours = earlystart.hour, minutes = earlystart.minute)).time()
+            begin_ = round_minutes(begin_, 5)
+            
             end_ = time.min if e.end >= dt_to else e.end.time()
+            end_ = round_minutes(end_, 5)
 
             schedule.insert_block(Block(start = begin_, end = end_, temperature = warm))
 

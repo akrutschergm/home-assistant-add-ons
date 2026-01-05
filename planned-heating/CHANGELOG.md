@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.9
+
+- Fixed schedule calculation issue with overnight events and timezone mismatch
+- Now rounds schedule begin and end time to 5 minutes
+
 ## 0.5.8
 
 - New: Added log_level config option
